@@ -1,18 +1,13 @@
 """
-core.py
+gym.py
 
-Core definition file for environments. Provides a simple string based registry for grabbing OpenAI Gym (or
-user-specified) environments, and folding them into a repo specific base class.
+Core definition file for OpenAI Gym environments. Given an environment ID, build a lazy-evaluated callable object
+for creating an environment, and lifting any necessary metadata.
 """
 import gym
 
 
-# Create Environment Registry (from OpenAI Gym + User)
-gym_registry = gym.envs.registry.env_specs.keys()
-user_registry = []
-
-
-class GymThunk:
+class GymThunk(object):
     def __init__(self, env_id):
         """
         Initialize a callable object (lazily-evaluated), for generating RL Environments. The purpose of a GymThunk
@@ -23,9 +18,6 @@ class GymThunk:
         """
         self.env_id = env_id
 
-        # Create empty metadata dictionary, for checking compatibility downstream (i.e. with policy)
-        self.metadata = {}
-
     def __call__(self, seed=None):
         """
         Provisions the environment, applying any wrappers as necessary.
@@ -35,13 +27,15 @@ class GymThunk:
 
         :return: Returns provisioned environment.
         """
-        env = gym.make(self.env_id)
+        env, metadata = gym.make(self.env_id), {}
 
         if hasattr(env, 'env'):
             # Classic Control Environment
             if 'classic_control' in str(env.env.__class__):
-                self.metadata = {'mlp', 'classic'}
-                return env
+                metadata = {'policy': ['mlp'], 'env-type': 'classic', 'obs_shape': env.observation_space.shape,
+                            'action_type': env.action_space.__class__.__name__,
+                            'action_shape': (env.action_space.n,) if env.action_space.__class__.__name__ == 'Discrete'
+                                                                  else env.action_space.shape}
 
             # Atari Environment
             elif 'atari' in str(env.env.__class__):
@@ -63,27 +57,4 @@ class GymThunk:
         else:
             raise NotImplementedError
 
-
-
-
-def build_env(env_id):
-    """
-    Function for looking up environment from registry, and packing it with the appropriate pre-processors (i.e.
-
-    :param env_id: Environment ID to look-up in registry.
-    :return:
-    """
-    # Check if Env is User Defined
-    if env_id in user_registry:
-        raise NotImplementedError  # TODO - Add User Defined Environment Example!
-
-    # Go through Gym Configurations
-    elif env_id in gym_registry:
-        # Create Environment Thunk
-        thunk = GymThunk(env_id)()
-
-    else:
-        raise KeyError("Given Environment cannot be found in User Registry, or Gym Registry!")
-
-
-
+        return env, metadata
