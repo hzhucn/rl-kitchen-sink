@@ -25,7 +25,7 @@ def get_policy(prefix, env_metadata, config='deepmind_atari'):
     if config == 'deepmind_atari':
         # Fill in Input/Output fields, using the env_metadata
         cfg = deepmind_atari[prefix]
-        cfg[0], cfg[-1] = ["In", env_metadata['obs_shape']], ["Out", env_metadata['action_shape']]
+        cfg[0], cfg[-1] = ["In", *env_metadata['obs_shape']], ["Out", env_metadata['action_shape']]
 
         # Switch on Policy Prefix
         if prefix == 'mlp':

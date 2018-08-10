@@ -4,6 +4,7 @@ main.py
 from algorithm import get_algorithm
 from distribute import get_distributed_backend
 from envs import build_env
+from experience import Experience
 from policies import get_policy
 
 import argparse
@@ -48,11 +49,18 @@ if __name__ == "__main__":
     # Build Distributed Environments
     envs = get_distributed_backend(env_template, args.num_processes, backend=args.distributed_backend)
 
+    # Obtain Environment metadata
+    metadata = envs.get_metadata()
+
     # Instantiate Policy
-    policy = get_policy(args.policy, envs.get_metadata())
+    policy = get_policy(args.policy, metadata)
 
     # Create agent, with the given training algorithm
     agent = get_algorithm(args.algorithm, policy, envs, args, visdom=viz)
+
+    # Create Experience Buffer, with the environment metadata
+    experience = Experience(metadata['max_episode_length'], args.num_processes, metadata['obs_shape'],
+                            metadata['action_type'], metadata['action_shape'])
 
     # Train agent
     agent.train(num_frames=args.num_frames)
