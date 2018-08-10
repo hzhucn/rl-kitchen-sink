@@ -28,14 +28,17 @@ class GymThunk(object):
         :return: Returns provisioned environment.
         """
         env, metadata = gym.make(self.env_id), {}
+        env.seed(seed=seed)
 
         if hasattr(env, 'env'):
             # Classic Control Environment
             if 'classic_control' in str(env.env.__class__):
-                metadata = {'policy': ['mlp'], 'env-type': 'classic', 'obs_shape': env.observation_space.shape,
+                metadata = {'policy': ['mlp'], 'env-type': 'classic',
+                            'obs_shape': env.observation_space.shape[0] if len(env.observation_space.shape) == 1
+                                                                        else env.observation_space.shape,
                             'action_type': env.action_space.__class__.__name__,
-                            'action_shape': (env.action_space.n,) if env.action_space.__class__.__name__ == 'Discrete'
-                                                                  else env.action_space.shape}
+                            'action_shape': env.action_space.n if env.action_space.__class__.__name__ == 'Discrete'
+                                                               else env.action_space.shape} # TODO!
 
             # Atari Environment
             elif 'atari' in str(env.env.__class__):
