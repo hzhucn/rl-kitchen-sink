@@ -30,8 +30,8 @@ def parse_args():
 
     p.add_argument("-n", "--num_frames", default=1000000, help='Number of frames to train for (default 1m)')
 
-
     return p.parse_args()
+
 
 if __name__ == "__main__":
     # Parse Command Line Arguments
@@ -64,7 +64,6 @@ if __name__ == "__main__":
 
     # Train agent
     agent.train(num_frames=args.num_frames)
-
 
     import IPython
     IPython.embed()
